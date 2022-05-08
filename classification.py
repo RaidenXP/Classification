@@ -17,13 +17,18 @@ def make_node(previous_ys, xs, ys, columns):
     
     # If there are no rows (xs and ys are empty): 
     #      Return a node that classifies as the majority class of the parent
-    
+    if len(xs) == 0 and len(ys) == 0:
+        return {"type" : "class", "class" : majority(previous_ys)}
+
     # If all ys are the same:
     #      Return a node that classifies as that class 
-    
+    if same(ys):
+        return {"type" : "class", "class" : ys[0]}
+
     # If there are no more columns left:
     #      Return a node that classifies as the majority class of the ys
-
+    if len(columns) == 0:
+        return {"type" : "class", "class" : majority(ys)}
 
     # Otherwise:
     # Compute the entropy of the current ys 
@@ -38,9 +43,56 @@ def make_node(previous_ys, xs, ys, columns):
     #    make_node for each piece 
     # Create a split-node that splits on this column, and has the result 
     #    of the recursive calls as children.
-    
+    current_entro = entropy(ys)
+    column_entro = {}
+    for column in columns:
+        pieces = {}
+        index = 0
+        for item in xs:
+            if item[column] not in pieces.keys():
+                pieces[item[column]] = [ys[index]]
+            else:
+                pieces[item[column]].append(ys[index])
+            
+            index += 1
+        
+        summation = 0
+        for key in pieces:
+            prob = len(pieces[key]) / len(xs)
+            summation += prob * entropy(pieces[key])
+        
+        column_entro[column] = summation
+
+    chosen_col = -1
+    highest_gain = -1
+    for key in column_entro:
+        if chosen_col == -1 or column_entro[key] - current_entro < highest_gain:
+            highest_gain = column_entro[key] - current_entro
+            chosen_col = key
+
+    branches = {}
+    index = 0
+    for item in xs:
+        if item[chosen_col] not in branches.keys():
+            branches[item[chosen_col]] = [ys[index]]
+        else:
+            branches[item[chosen_col]].append(ys[index])
+
+        index += 1
+
+    new_xs = []
+    for item in xs:
+        new_xs.append(item.copy())
+
+    for item in new_xs:
+        item.remove(item[chosen_col])
+
+    tree = {"type" : "split", "split" : chosen_col}
+    for key in branches:
+        tree.update({ "children" : make_node(ys, new_xs, branches[key], list(range(len(new_xs[0])))) })
+
     # Note: This is a placeholder return value
-    return {"type": "class", "class": majority(ys)}
+    #return {"type": "class", "class": majority(ys)}
 
     
     
@@ -48,28 +100,47 @@ def make_node(previous_ys, xs, ys, columns):
 # Determine if all values in a list are the same 
 # Useful for the second basecase above
 def same(values):
-    if not values: return True
+    if not values: 
+        return True
+    else:
+        item_set = set(values)
+        if len(item_set) == 1:
+            return True
+    
+    return False
+
     # if there are values:
     # pick the first, check if all other are the same 
-
-
     
 # Determine how often each value shows up 
 # in a list; this is useful for the entropy
 # but also to determine which values is the 
 # most common
 def counts(values):
+    total = {}
+    unique = set(values)
+    
+    for item in unique:
+        total[item] = values.count(item)
 
     # placeholder return value 
-    return {}
+    return total
    
 
 # Return the most common value from a list 
 # Useful for base cases 1 and 3 above.
 def majority(values):
+    total = counts(values)
+    majority_value = -1
+    current_total = -1
+
+    for key in total:
+        if(total[key] > current_total):
+            current_total = total[key]
+            majority_value = key
 
     # placeholder return value
-    return 0
+    return majority_value
     
     
 # Calculate the entropy of a set of values 
@@ -79,9 +150,18 @@ def majority(values):
 # The entropy is the negation of the sum of p*log2(p) 
 # for all these probabilities.
 def entropy(values):
+    total = counts(values)
+    total_amt = len(values)
+    summation = 0
+
+    for key in total:
+        prob = total[key] / total_amt
+        summation += (prob * numpy.log2(prob))
+
+    summation *= -1
 
     # placeholder return value
-    return 0
+    return summation
 
 # This is the main decision tree class 
 # DO NOT CHANGE THE FOLLOWING LINE
@@ -93,7 +173,7 @@ class DecisionTree:
     # DO NOT CHANGE THE FOLLOWING LINE    
     def fit(self, x, y):
     # DO NOT CHANGE THE PRECEDING LINE
-    
+
         self.majority = majority(y)
         self.tree = make_node(y, x, y, list(range(len(x[0]))))
         
