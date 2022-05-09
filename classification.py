@@ -70,27 +70,24 @@ def make_node(previous_ys, xs, ys, columns):
             highest_gain = column_entro[key] - current_entro
             chosen_col = key
 
+    columns.remove(chosen_col)
+
     branches = {}
     index = 0
     for item in xs:
         if item[chosen_col] not in branches.keys():
-            branches[item[chosen_col]] = [ys[index]]
+            branches[item[chosen_col]] = {"ys" : [ys[index]], "xs" : [xs[index].copy()]}
         else:
-            branches[item[chosen_col]].append(ys[index])
+            branches[item[chosen_col]]["ys"].append(ys[index])
+            branches[item[chosen_col]]["xs"].append(xs[index].copy())
 
         index += 1
 
-    new_xs = []
-    for item in xs:
-        new_xs.append(item.copy())
-
-    for item in new_xs:
-        item.remove(item[chosen_col])
-
-    tree = {"type" : "split", "split" : chosen_col}
+    tree = {"type" : "split", "split" : chosen_col, "children" : {}}
     for key in branches:
-        tree.update({ "children" : make_node(ys, new_xs, branches[key], list(range(len(new_xs[0])))) })
+        tree["children"].update( { key : make_node(ys, branches[key]['xs'], branches[key]['ys'], columns)} )
 
+    return tree
     # Note: This is a placeholder return value
     #return {"type": "class", "class": majority(ys)}
 
@@ -183,17 +180,21 @@ class DecisionTree:
         if not self.tree:
             return None
 
+        predictions = []
         # To classify using the tree:
         # Start with the root as the "current" node
         # As long as the current node is an interior node (type == "split"):
         #    get the value of the attribute the split is performed on 
         #    select the child corresponding to that value as the new current node 
-        
+        current = {"type" : self.tree['type']}
+
         # NOTE: In some cases, your tree may not have a child for a particular value 
         #       In that case, return the majority value (self.majority) from the training set 
         
         # IMPORTANT: You have to perform this classification *for each* element in x 
         
+
+
         # placeholder return value
         # Note that the result is a list of predictions, one for each x-value
         return [self.majority for _ in x]
