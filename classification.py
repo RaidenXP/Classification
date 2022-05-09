@@ -64,7 +64,7 @@ def make_node(previous_ys, xs, ys, columns):
         column_entro[column] = summation
 
     chosen_col = -1
-    highest_gain = -1
+    highest_gain = 0
     for key in column_entro:
         if chosen_col == -1 or column_entro[key] - current_entro < highest_gain:
             highest_gain = column_entro[key] - current_entro
