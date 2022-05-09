@@ -186,18 +186,28 @@ class DecisionTree:
         # As long as the current node is an interior node (type == "split"):
         #    get the value of the attribute the split is performed on 
         #    select the child corresponding to that value as the new current node 
-        current = {"type" : self.tree['type']}
 
         # NOTE: In some cases, your tree may not have a child for a particular value 
         #       In that case, return the majority value (self.majority) from the training set 
         
         # IMPORTANT: You have to perform this classification *for each* element in x 
         
-
+        for item in x:
+            current = self.tree
+            while current["type"] == "split":
+                split = current["split"]
+                choice = item[split]
+                if choice in current["children"]:
+                    current = current["children"][choice]
+                else:
+                    predictions.append(self.majority)
+                    break
+            if(current["type"] != "split"):
+                predictions.append(current["class"])
 
         # placeholder return value
         # Note that the result is a list of predictions, one for each x-value
-        return [self.majority for _ in x]
+        return predictions
     
     # DO NOT CHANGE THE FOLLOWING LINE
     def to_dict(self):
