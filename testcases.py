@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.naive_bayes import CategoricalNB
 from sklearn.preprocessing import OrdinalEncoder
+import io
 
 # Naive Bayes using sklearn 
 class NaiveBayes:
@@ -110,6 +111,8 @@ def classification_testcase(training, validation, n, visualize=True, model="Deci
     ty = get_columns(training, target, single=True)
     m.fit(tx, ty)
     print(json.dumps(m.to_dict(), indent=4))
+    #with open('tree2.txt', 'w') as f:
+        #f.write(json.dumps(m.to_dict(), indent=4))
     predty = m.predict(tx)
     evaluate(model + " training ", ty, predty)
     vx = get_columns(validation, columns)
